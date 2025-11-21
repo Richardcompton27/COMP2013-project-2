@@ -4,7 +4,9 @@ export default function ProductForm({
     image, 
     price, 
     handleOnSubmit, 
-    handleOnChange}) {
+    handleOnChange,
+    isEditing
+    }) {
     return (<div>
     <form onSubmit={handleOnSubmit}>
         <label htmlFor="productName">productName: </label>
@@ -19,7 +21,7 @@ export default function ProductForm({
         <label htmlFor="price">price: </label>
         <input type="text" name="price" id="price" value={price} onChange={handleOnChange}placeholder="enter price"/> 
         <br/>
-        <button>Submit</button>
+        <button>{isEditing? "Edit" : "Submit" }</button>
     </form>
     </div>
     );

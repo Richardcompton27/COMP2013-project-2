@@ -82,4 +82,19 @@ server.get("/products/:id", async (request, response) => {
     
 })
 
-
+//to patch a product by id
+server.patch("/products/:id", async (request, response) => {
+    const { id } = request.params;
+    const { productName, brand, image, price } = request.body;
+    try{
+        await Product.findByIdAndUpdate(id, {
+            productName,
+            brand,
+            image,
+            price,
+        });
+        response.send({message: `Contact has been updated with id ${id}`})
+    }catch(error){
+        response.status(500).send({message: error.message});
+    }
+});

@@ -26,6 +26,7 @@ const [formData, setFormData] = useState({ // is used to store and manage the fo
 });
 
 const [postResponse, setPostResponse] = useState("");
+const [isEditing, setIsEditing] = useState(false);
 //get data from db handler
 //one handler for the database becase it was being weird
 const handleProductsDB = async () => {
@@ -57,26 +58,35 @@ useEffect(() => {
   handleProductsDB();
 }, [postResponse]); 
 
-
+//handle to reset the form
+const handleResetForm = () => {
+setFormData({
+      productName: "",
+      brand: "",
+      image: "",
+      price: "",
+    });
+}
 
 //handle the submission of data
 const handleOnSubmit = async(e) => {
   e.preventDefault();
   try{
-  const newProductId = Date.now().toString(); //creates a variable for the new id and does what the comment below explains
-  await axios.post("http://localhost:3000/products", {...formData, id: newProductId }) //added this to just make a random unique id like all the original data has as thats how it allows the quantity to change and it to be added to cart
-  .then((response) => {setPostResponse(response.data.message); //inside the .then it has 2 functions the message and the registers the new id inside product quantity so it can be used to edit the quantity like how it does it when the db is created
-    setProductQuantity(prev => [
-    ...prev,
-    { id: newProductId, quantity: 0 }
-    ]);
-  }).then(() => setFormData({
-    productName: "",
-    brand: "",
-    image: "",
-    price: "",
-  }));
-  }catch(error) {
+    if(isEditing){
+      handleOnUpdate(formData._id);
+      handleResetForm();
+      setIsEditing(false);
+    }else{
+      const newProductId = Date.now().toString(); //creates a variable for the new id and does what the comment below explains
+      await axios.post("http://localhost:3000/products", {...formData, id: newProductId }) //added this to just make a random unique id like all the original data has as thats how it allows the quantity to change and it to be added to cart
+      .then((response) => {setPostResponse(response.data.message); //inside the .then it has 2 functions the message and the registers the new id inside product quantity so it can be used to edit the quantity like how it does it when the db is created
+      setProductQuantity(prev => [
+      ...prev,
+      { id: newProductId, quantity: 0 }
+      ]);
+      }).then(() => 
+        handleResetForm());
+  }}catch(error) {
     console.log(error.message);
   }
 };
@@ -114,12 +124,23 @@ const handleOnEdit = async (id) => {
       brand: productToEdit.data.brand,
       image: productToEdit.data.image,
       price: productToEdit.data.price,
+      _id: productToEdit.data._id,
     });
+    setIsEditing(true);
   }catch(error){
     console.log(error.message);
   }
 };
 
+//handle the updating the api patch route
+const handleOnUpdate = async (id) => {
+  try{
+    const result = await axios.patch(`http://localhost:3000/products/${id}`, formData);
+    setPostResponse(result.data.message);
+  }catch(error){
+    console.log(error)
+  };
+}
 
 //handlers
 
@@ -207,7 +228,9 @@ const handleOnEdit = async (id) => {
         image={formData.image} 
         price={formData.price} 
         handleOnSubmit={handleOnSubmit} 
-        handleOnChange={handleOnChange}/>
+        handleOnChange={handleOnChange}
+        isEditing={isEditing}
+        />
         <ProductsContainer
           products={products}
           handleAddQuantity={handleAddQuantity}
