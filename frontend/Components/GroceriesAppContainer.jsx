@@ -1,14 +1,49 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CartContainer from "./CartContainer";
 import ProductsContainer from "./ProductsContainer";
 import NavBar from "./NavBar";
-
-export default function GroceriesAppContainer({ products }) {
+import axios from "axios";
+export default function GroceriesAppContainer() {
+  /*
   const [productQuantity, setProductQuantity] = useState(
     products.map((product) => ({ id: product.id, quantity: 0 }))
   );
+  
+*/
+//states
+const [products, setProductsData] = useState([]);
+const [cartList, setCartList] = useState([]);
+const [productQuantity, setProductQuantity] = useState([]);
 
-  const [cartList, setCartList] = useState([]);
+//one handler for the database becase it was being weird
+const handleProductsDB = async () => {
+  try {
+    const response = await axios.get("http://localhost:3000/products");
+    setProductsData(response.data);
+
+    setProductQuantity((prev) => {
+  if (prev.length === 0) {
+    return response.data.map((product) => ({
+      id: product.id,
+      quantity: 0
+    }));
+  }
+  return prev;
+});
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+//use effect
+
+useEffect(() => {
+  handleProductsDB();
+}, []); 
+
+
+
+//handlers
 
   const handleAddQuantity = (productId, mode) => {
     if (mode === "cart") {
@@ -55,7 +90,7 @@ export default function GroceriesAppContainer({ products }) {
   };
 
   const handleAddToCart = (productId) => {
-    const product = products.find((product) => product.id === productId);
+    const product = products.find((product) => (product.id) === productId);
     const pQuantity = productQuantity.find(
       (product) => product.id === productId
     );
@@ -73,15 +108,17 @@ export default function GroceriesAppContainer({ products }) {
     setCartList(newCartList);
   };
 
+
   const handleRemoveFromCart = (productId) => {
-    const newCartList = cartList.filter((product) => product.id !== productId);
+    const newCartList = cartList.filter((product) => (product.id) !== productId);
     setCartList(newCartList);
   };
 
   const handleClearCart = () => {
     setCartList([]);
   };
-
+  
+  //render
   return (
     <div>
       <NavBar quantity={cartList.length} />

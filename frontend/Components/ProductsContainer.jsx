@@ -11,13 +11,13 @@ export default function ProductsContainer({
     <div className="ProductsContainer">
       {products.map((product) => (
         <ProductCard
-          key={product.id}
+          key={product._id || product.id}
           {...product}
           handleAddQuantity={handleAddQuantity}
           handleRemoveQuantity={handleRemoveQuantity}
           handleAddToCart={handleAddToCart}
           productQuantity={
-            productQuantity.find((p) => p.id === product.id).quantity
+            productQuantity.find((p) => p.id === (product.id)).quantity
           }
         />
       ))}
