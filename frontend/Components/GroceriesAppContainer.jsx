@@ -3,6 +3,7 @@ import CartContainer from "./CartContainer";
 import ProductsContainer from "./ProductsContainer";
 import NavBar from "./NavBar";
 import axios from "axios";
+import ProductForm from "./ProductsForm";
 export default function GroceriesAppContainer() {
   /*
   const [productQuantity, setProductQuantity] = useState(
@@ -14,7 +15,13 @@ export default function GroceriesAppContainer() {
 const [products, setProductsData] = useState([]);
 const [cartList, setCartList] = useState([]);
 const [productQuantity, setProductQuantity] = useState([]);
-
+const [formData, setFormData] = useState({
+  productName: "",
+  brand: "",
+  image: "",
+  price: "",
+});
+//get data from db handler
 //one handler for the database becase it was being weird
 const handleProductsDB = async () => {
   try {
@@ -40,6 +47,32 @@ const handleProductsDB = async () => {
 useEffect(() => {
   handleProductsDB();
 }, []); 
+
+
+
+//handle the submission of data
+const handleOnSubmit = async() => {
+  try{
+  await axios.post("http://localhost:3000/products", formData)
+  .then((response) => console.logI(response));
+  }catch(error) {
+    console.log(error.message);
+  }
+};
+
+
+//handle the onchange event for the form
+const handleOnChange = (e) => {
+setFormData((prevData) => {
+  return {...prevData, [e.target.name]: e.target.value};
+  
+
+})
+
+};
+
+
+
 
 
 
@@ -123,6 +156,13 @@ useEffect(() => {
     <div>
       <NavBar quantity={cartList.length} />
       <div className="GroceriesApp-Container">
+        <ProductForm 
+        productName={formData.productName} 
+        brand={formData.brand} 
+        image={formData.image} 
+        price={formData.price} 
+        handleOnSubmit={handleOnSubmit} 
+        handleOnChange={handleOnChange}/>
         <ProductsContainer
           products={products}
           handleAddQuantity={handleAddQuantity}
