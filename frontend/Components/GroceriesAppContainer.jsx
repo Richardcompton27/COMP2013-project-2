@@ -12,22 +12,31 @@ export default function GroceriesAppContainer() {
   
 */
 //states
-const [products, setProductsData] = useState([]);
-const [cartList, setCartList] = useState([]);
-const [productQuantity, setProductQuantity] = useState([]);
-const [formData, setFormData] = useState({
+const [products, setProductsData] = useState([]); //is used to store and manage the products
+
+const [cartList, setCartList] = useState([]);// is used to store and manage the cart
+
+const [productQuantity, setProductQuantity] = useState([]); // is used to store and manage product quantity
+
+const [formData, setFormData] = useState({ // is used to store and manage the form data
   productName: "",
   brand: "",
   image: "",
   price: "",
 });
+
+const [postResponse, setPostResponse] = useState("");
 //get data from db handler
 //one handler for the database becase it was being weird
 const handleProductsDB = async () => {
   try {
     const response = await axios.get("http://localhost:3000/products");
     setProductsData(response.data);
-
+    //had to put this in here as before it was tied to products being passed through to this jsx file but now its coming from 
+    // a db and it was the easiest way i could find how to do it 
+    //so this allows me to still have the quantity buttons work
+    //also it was giving me an error that it was either out of range or repeating for some reason 
+    //this should fix it 
     setProductQuantity((prev) => {
   if (prev.length === 0) {
     return response.data.map((product) => ({
@@ -46,15 +55,27 @@ const handleProductsDB = async () => {
 
 useEffect(() => {
   handleProductsDB();
-}, []); 
+}, [postResponse]); 
 
 
 
 //handle the submission of data
-const handleOnSubmit = async() => {
+const handleOnSubmit = async(e) => {
+  e.preventDefault();
   try{
-  await axios.post("http://localhost:3000/products", formData)
-  .then((response) => console.logI(response));
+  const newProductId = Date.now().toString(); //creates a variable for the new id and does what the comment below explains
+  await axios.post("http://localhost:3000/products", {...formData, id: newProductId }) //added this to just make a random unique id like all the original data has as thats how it allows the quantity to change and it to be added to cart
+  .then((response) => {setPostResponse(response.data.message); //inside the .then it has 2 functions the message and the registers the new id inside product quantity so it can be used to edit the quantity like how it does it when the db is created
+    setProductQuantity(prev => [
+    ...prev,
+    { id: newProductId, quantity: 0 }
+    ]);
+  }).then(() => setFormData({
+    productName: "",
+    brand: "",
+    image: "",
+    price: "",
+  }));
   }catch(error) {
     console.log(error.message);
   }
@@ -72,8 +93,32 @@ setFormData((prevData) => {
 };
 
 
+//handle to delete one product by id
+const handleOnDelete = async(id) => {
+  try{
+    const response = await axios.delete(`http://localhost:3000/products/${id}`);
+    setPostResponse(response.data.message);
+  }catch(error){
+    console.log(error.message);
+  }
+};
 
+//handle the edition of one contact by its id
 
+const handleOnEdit = async (id) => {
+  try{
+    const productToEdit = await axios.get(`http://localhost:3000/products/${id}`);
+    //setPostResponse(response.data.message);
+    setFormData({
+      productName: productToEdit.data.productName,
+      brand: productToEdit.data.brand,
+      image: productToEdit.data.image,
+      price: productToEdit.data.price,
+    });
+  }catch(error){
+    console.log(error.message);
+  }
+};
 
 
 //handlers
@@ -156,7 +201,7 @@ setFormData((prevData) => {
     <div>
       <NavBar quantity={cartList.length} />
       <div className="GroceriesApp-Container">
-        <ProductForm 
+        <ProductForm //for the form this is all the data being passed from the ProductsForm.jsx
         productName={formData.productName} 
         brand={formData.brand} 
         image={formData.image} 
@@ -169,6 +214,8 @@ setFormData((prevData) => {
           handleRemoveQuantity={handleRemoveQuantity}
           handleAddToCart={handleAddToCart}
           productQuantity={productQuantity}
+          handleOnDelete={handleOnDelete}
+          handleOnEdit={handleOnEdit}
         />
         <CartContainer
           cartList={cartList}

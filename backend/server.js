@@ -42,9 +42,11 @@ server.get("/products", async (request, response) => {
     }
 });
 
+//to post a new product to db
 server.post("/products", async (request, response) => {
-    const{productName, brand, image, price} = request.body
+    const{id, productName, brand, image, price} = request.body
     const newProduct = new Product({
+        id,// added this in hopes of being an easy way to keep my system for updating quantity and doing all those changed using the id without switching to mongos _id
         productName,
         brand, 
         image,
@@ -57,3 +59,27 @@ server.post("/products", async (request, response) => {
         response.status(400).send({message: error.message})
     }
 });
+
+//to delete a product from db by its id
+server.delete("/products/:id", async (request, response) => {
+    const { id } = request.params;
+    try{
+        await Product.findByIdAndDelete(id);
+        resoonse.send({message: `contact is deleted with the ${id}`});
+    }catch(error){
+    response.status(400).send({message: error.message });
+    }
+});
+
+//to get one product by id
+server.get("/products/:id", async (request, response) => {
+    const{id} = request.params
+    try{
+        const productToEdit = await Product.findById(id)
+        response.send(productToEdit);
+    }catch(error)
+    {response.status(500).send({message: error.message})};
+    
+})
+
+
